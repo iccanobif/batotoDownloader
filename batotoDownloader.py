@@ -4,10 +4,9 @@ import urllib.request
 import re
 import io
 import gzip
+import time
 from bs4 import BeautifulSoup
-
-def printError():
-	print("Error at line", sys.exc_info()[2].tb_lineno, ":", sys.exc_info()[1])
+from PySide import QtCore
 
 class Chapter:
 	def __init(self):
@@ -15,97 +14,91 @@ class Chapter:
 		self.link = ""
 		self.language = ""
 		self.groupName = ""
+
+class MangaDownloader(QtCore.QObject):
+	
+	logWritten = QtCore.Signal(str)
+	
+	def log(self, text):
+		self.logWritten.emit(text)
+	
+	def printError(self):
+		self.log("Error at line", sys.exc_info()[2].tb_lineno, ":", sys.exc_info()[1])
+	
+	def getHtml(self, url):
+		self.log("downloading " + url)
+		req = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11", "Accept-Encoding": "gzip"}))
+		bi = io.BytesIO(req.read())
+		gf = gzip.GzipFile(fileobj=bi, mode="rb")
+		output = gf.read()
+		req.close()
+		return output
+	
+	def getChapterList(self, url):
+		html = self.getHtml(url)
+		#html = open("konos.htm").read()
+		output = []
+		soup = BeautifulSoup(html)
+		rows = soup.find(class_="chapters_list").find_all("tr")
+		i = 0
 		
-
-def getHtml(url):
-	print("downloading " + url)
-	req = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11", "Accept-Encoding": "gzip"}))
-	bi = io.BytesIO(req.read())
-	gf = gzip.GzipFile(fileobj=bi, mode="rb")
-	output = gf.read()
-	req.close()
-	return output
-
-def getChapterList(url):
-	html = getHtml(url)
-	#html = open("konos.htm").read()
-	output = []
-	soup = BeautifulSoup(html)
-	rows = soup.find(class_="chapters_list").find_all("tr")
-	i = 0
+		for tr in rows:
+			cols = tr.find_all("td")
+			if (len(cols) == 0):
+				continue #it's the header
+			if (cols[0].a == None):
+				continue
+			
+			c = Chapter()
+			c.id = i
+			c.link = cols[0].a["href"]
+			c.title = cols[0].a.text.strip()
+			c.language = cols[1].div["title"]
+			c.groupName = cols[2].a.text.strip()
+			output.append(c)
+			
+			i += 1
+		return output
 	
-	for tr in rows:
-		cols = tr.find_all("td")
-		if (len(cols) == 0):
-			continue #it's the header
-		if (cols[0].a == None):
-			continue
+	def getImageUrl(self, html):
+		soup = BeautifulSoup(html)
+		return soup.find(id="comic_page")["src"]
 		
-		c = Chapter()
-		c.id = i
-		c.link = cols[0].a["href"]
-		c.title = cols[0].a.text.strip()
-		c.language = cols[1].div["title"]
-		c.groupName = cols[2].a.text.strip()
-		output.append(c)
+	def downloadPicture(self, chapterUrl, downloadDir):
+		if downloadDir[-1:] != '\\':
+			downloadDir = downloadDir + '\\'
+		filename = downloadDir + "\\" + chapterUrl[chapterUrl.rfind("/") + 1:]
+		self.log(filename)
+		if os.path.isfile(filename):
+			self.log("Warning: this file already exists. I won't re-download it")
+			return
+		req = urllib.request.urlopen(chapterUrl)
+		content = req.read()
+		f = open(filename, "wb")
+		f.write(content)
+		f.close()
 		
-		i += 1
-
-#	for i in range(len(output) - 1, -1, -1):
-#		c = output[i]
-#		print(c.title + " " + c.link)
-	return output
-
-def getImageUrl(html):
-	soup = BeautifulSoup(html)
-	return soup.find(id="comic_page")["src"]
+	def downloadChapter(self, chaptersListUrl, downloadDir):
+		
+		chaptersListHtml = self.getHtml(chaptersListUrl)
+		soup = BeautifulSoup(chaptersListHtml)
+		numberOfPages = len(soup.find(id="page_select").find_all("option"))
+		self.log("Page 1 out of " + str(numberOfPages))
+		
+		self.downloadPicture(self.getImageUrl(chaptersListHtml), downloadDir)
+		
+		for i in range(2, numberOfPages + 1):
+			try:
+				chapterUrl = chaptersListUrl + "/" + str(i)
+				self.log("Page " + str(i) + " out of " + str(numberOfPages) + ": " + chapterUrl)
+				pageHtml = self.getHtml(chapterUrl)
+				self.downloadPicture(self.getImageUrl(pageHtml), downloadDir)
+			except:
+				self.printError()
 	
-def downloadPicture(chapterUrl, downloadDir):
-	filename = downloadDir + "\\" + chapterUrl[chapterUrl.rfind("/") + 1:]
-	print(filename)
-	if os.path.isfile(filename):
-		print("Warning: this file already exists. I won't re-download it")
-		return
-	req = urllib.request.urlopen(chapterUrl)
-	content = req.read()
-	f = open(filename, "wb")
-	f.write(content)
-	f.close()
-	
-def downloadChapter(chaptersListUrl, downloadDir):
-	
-	chaptersListHtml = getHtml(chaptersListUrl)
-	soup = BeautifulSoup(chaptersListHtml)
-	numberOfPages = len(soup.find(id="page_select").find_all("option"))
-	print("Page 1 out of " + str(numberOfPages))
-	
-	downloadPicture(getImageUrl(chaptersListHtml), downloadDir)
-	
-	for i in range(2, numberOfPages + 1):
-		try:
-			chapterUrl = chaptersListUrl + "/" + str(i)
-			print("Page " + str(i) + " out of " + str(numberOfPages) + ": " + chapterUrl)
-			pageHtml = getHtml(chapterUrl)
-			downloadPicture(getImageUrl(pageHtml), downloadDir)
-		except:
-			printError()
-
-#########
-# START #
-#########
-def main():
-	if len(sys.argv) == 1:
-		print(r"Usage: python batotoDownloader.py chapterUrl [targetDirectory]")
-		quit()
-	
-	mainUrl = sys.argv[1]
-	
-	if len(sys.argv) > 2:
-		outputDirectory = sys.argv[2]
-	else:
-		outputDirectory = "."
-	
-	downloadChapter(mainUrl, outputDirectory)
-
-if __name__ == "__main__":
-	main()
+	def fakeJob(self):
+		self.log("START JOB")
+		for i in range(0, 20):
+			time.sleep(0.1)
+			self.log("working " + str(i) + "...")
+		self.log("DONE")
