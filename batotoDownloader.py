@@ -6,6 +6,9 @@ import io
 import gzip
 from bs4 import BeautifulSoup
 
+def printError():
+	print("Error at line", sys.exc_info()[2].tb_lineno, ":", sys.exc_info()[1])
+
 class Chapter:
 	def __init(self):
 		self.title = ""
@@ -50,18 +53,36 @@ def getImageUrl(html):
 	soup = BeautifulSoup(html)
 	return soup.find(id="comic_page")["src"]
 	
-def downloadPicture(url, downloadDir):
-	filename = downloadDir + "\\" + url[url.rfind("/") + 1:]
+def downloadPicture(chapterUrl, downloadDir):
+	filename = downloadDir + "\\" + chapterUrl[chapterUrl.rfind("/") + 1:]
 	print(filename)
 	if os.path.isfile(filename):
 		print("Warning: this file already exists. I won't re-download it")
 		return
-	req = urllib.request.urlopen(url)
+	req = urllib.request.urlopen(chapterUrl)
 	content = req.read()
 	f = open(filename, "wb")
 	f.write(content)
 	f.close()
 	
+def downloadChapter(chaptersListUrl, downloadDir):
+	
+	chaptersListHtml = getHtml(chaptersListUrl)
+	soup = BeautifulSoup(chaptersListHtml)
+	numberOfPages = len(soup.find(id="page_select").find_all("option"))
+	print("Page 1 out of " + str(numberOfPages))
+	
+	downloadPicture(getImageUrl(chaptersListHtml), downloadDir)
+	
+	for i in range(2, numberOfPages + 1):
+		try:
+			chapterUrl = chaptersListUrl + "/" + str(i)
+			print("Page " + str(i) + " out of " + str(numberOfPages) + ": " + chapterUrl)
+			pageHtml = getHtml(chapterUrl)
+			downloadPicture(getImageUrl(pageHtml), downloadDir)
+		except:
+			printError()
+
 #########
 # START #
 #########
@@ -77,18 +98,4 @@ if len(sys.argv) > 2:
 else:
 	outputDirectory = "."
 
-html = getHtml(mainUrl)
-soup = BeautifulSoup(html)
-numberOfPages = len(soup.find(id="page_select").find_all("option"))
-print("Page 1 out of " + str(numberOfPages))
-
-downloadPicture(getImageUrl(html), outputDirectory)
-
-for i in range(2, numberOfPages + 1):
-	try:
-		url = mainUrl + "/" + str(i)
-		print("Page " + str(i) + " out of " + str(numberOfPages) + ": " + url)
-		h=getHtml(url)
-		downloadPicture(getImageUrl(h), outputDirectory)
-	except:
-		print("Error:", sys.exc_info()[0])
+downloadChapter(mainUrl, outputDirectory)
