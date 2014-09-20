@@ -15,11 +15,24 @@ class Chapter:
 		self.link = ""
 		self.language = ""
 		self.groupName = ""
+		
 
-def getChapterList(html):
+def getHtml(url):
+	print("downloading " + url)
+	req = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11", "Accept-Encoding": "gzip"}))
+	bi = io.BytesIO(req.read())
+	gf = gzip.GzipFile(fileobj=bi, mode="rb")
+	output = gf.read()
+	req.close()
+	return output
+
+def getChapterList(url):
+	html = getHtml(url)
+	#html = open("konos.htm").read()
 	output = []
 	soup = BeautifulSoup(html)
 	rows = soup.find(class_="chapters_list").find_all("tr")
+	i = 0
 	
 	for tr in rows:
 		cols = tr.find_all("td")
@@ -29,24 +42,18 @@ def getChapterList(html):
 			continue
 		
 		c = Chapter()
+		c.id = i
 		c.link = cols[0].a["href"]
 		c.title = cols[0].a.text.strip()
 		c.language = cols[1].div["title"]
 		c.groupName = cols[2].a.text.strip()
 		output.append(c)
+		
+		i += 1
 
 #	for i in range(len(output) - 1, -1, -1):
 #		c = output[i]
 #		print(c.title + " " + c.link)
-	return output
-
-def getHtml(url):
-	print("downloading " + url)
-	req = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11", "Accept-Encoding": "gzip"}))
-	bi = io.BytesIO(req.read())
-	gf = gzip.GzipFile(fileobj=bi, mode="rb")
-	output = gf.read()
-	req.close()
 	return output
 
 def getImageUrl(html):
@@ -86,16 +93,19 @@ def downloadChapter(chaptersListUrl, downloadDir):
 #########
 # START #
 #########
+def main():
+	if len(sys.argv) == 1:
+		print(r"Usage: python batotoDownloader.py chapterUrl [targetDirectory]")
+		quit()
+	
+	mainUrl = sys.argv[1]
+	
+	if len(sys.argv) > 2:
+		outputDirectory = sys.argv[2]
+	else:
+		outputDirectory = "."
+	
+	downloadChapter(mainUrl, outputDirectory)
 
-if len(sys.argv) == 1:
-	print(r"Usage: python batotoDownloader.py chapterUrl [targetDirectory]")
-	quit()
-
-mainUrl = sys.argv[1]
-
-if len(sys.argv) > 2:
-	outputDirectory = sys.argv[2]
-else:
-	outputDirectory = "."
-
-downloadChapter(mainUrl, outputDirectory)
+if __name__ == "__main__":
+	main()

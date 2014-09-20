@@ -1,3 +1,7 @@
 bs4/__pycache__
 bs4/builder/__pycache__/
 *.html
+*.htm
+*.jpg
+*.png
+__pycache__
