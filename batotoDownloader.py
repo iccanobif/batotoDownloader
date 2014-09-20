@@ -5,6 +5,7 @@ import re
 import io
 import gzip
 import time
+from zipfile import ZipFile
 from bs4 import BeautifulSoup
 from PySide import QtCore
 
@@ -26,7 +27,7 @@ class MangaDownloader(QtCore.QObject):
 		self.log("Error at line", sys.exc_info()[2].tb_lineno, ":", sys.exc_info()[1])
 	
 	def getHtml(self, url):
-		self.log("downloading " + url)
+		#self.log("downloading " + url)
 		req = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11", "Accept-Encoding": "gzip"}))
 		bi = io.BytesIO(req.read())
 		gf = gzip.GzipFile(fileobj=bi, mode="rb")
@@ -65,10 +66,8 @@ class MangaDownloader(QtCore.QObject):
 		return soup.find(id="comic_page")["src"]
 		
 	def downloadPicture(self, chapterUrl, downloadDir):
-		if downloadDir[-1:] != '\\':
-			downloadDir = downloadDir + '\\'
 		filename = downloadDir + "\\" + chapterUrl[chapterUrl.rfind("/") + 1:]
-		self.log(filename)
+		#self.log(filename)
 		if os.path.isfile(filename):
 			self.log("Warning: this file already exists. I won't re-download it")
 			return
@@ -78,8 +77,10 @@ class MangaDownloader(QtCore.QObject):
 		f.write(content)
 		f.close()
 		
-	def downloadChapter(self, chaptersListUrl, downloadDir):
-		
+	def downloadChapter(self, chaptersListUrl, downloadDir, saveToZip):
+		if downloadDir[-1:] == '\\':
+			downloadDir = downloadDir[0:-1]
+			
 		chaptersListHtml = self.getHtml(chaptersListUrl)
 		soup = BeautifulSoup(chaptersListHtml)
 		numberOfPages = len(soup.find(id="page_select").find_all("option"))
@@ -90,11 +91,23 @@ class MangaDownloader(QtCore.QObject):
 		for i in range(2, numberOfPages + 1):
 			try:
 				chapterUrl = chaptersListUrl + "/" + str(i)
-				self.log("Page " + str(i) + " out of " + str(numberOfPages) + ": " + chapterUrl)
+				self.log("Page " + str(i) + " out of " + str(numberOfPages))
 				pageHtml = self.getHtml(chapterUrl)
 				self.downloadPicture(self.getImageUrl(pageHtml), downloadDir)
 			except:
 				self.printError()
+		
+		if saveToZip:
+			self.log("Zipping...")
+			zip = ZipFile(downloadDir + ".zip", "w")
+			for fileName in os.listdir(downloadDir):
+				f = open(downloadDir + "\\" + fileName, "rb")
+				zip.writestr(fileName, f.read())
+				f.close()
+				os.remove(downloadDir + "\\" + fileName)
+			zip.close()
+			os.removedirs(downloadDir)
+		self.log("Chapter done!")
 	
 	def fakeJob(self):
 		self.log("START JOB")

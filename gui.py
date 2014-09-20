@@ -92,12 +92,12 @@ class DownloaderThread(QThread):
 			#return
 			
 			for c in self.chapters:
-				directory = c.title + "_" + c.groupName
+				directory = c.title + " [" + c.groupName + "]"
 				directory = re.sub(r'[/?<>\\:*|"]', "_", directory)
+				directory = r"f:\mieiProgrammi\batotoDownloader" + "\\" + directory
 				if not os.path.exists(directory):
 					os.makedirs(directory)
-				downloader.downloadChapter(c.link, directory)
-			self.emitSignal("DONE!")
+				downloader.downloadChapter(c.link, directory, True)
 			self.workDone.emit()
 		except:
 			self.emitSignal("Error:" + str(sys.exc_info()[1]))
