@@ -70,6 +70,9 @@ def downloadSelectedChapters():
 	thread.start()
 	return
 
+def selectTargetDirectory():
+	txtTargetDirectory.setText(QFileDialog.getExistingDirectory())
+
 # Worker Thread
 class DownloaderThread(QThread):
 
@@ -94,7 +97,9 @@ class DownloaderThread(QThread):
 			for c in self.chapters:
 				directory = c.title + " [" + c.groupName + "]"
 				directory = re.sub(r'[/?<>\\:*|"]', "_", directory)
-				directory = r"f:\mieiProgrammi\batotoDownloader" + "\\" + directory
+				if txtTargetDirectory.text()[-1:] != "\\":
+					directory = "\\" + directory
+				directory = txtTargetDirectory.text() + directory
 				if not os.path.exists(directory):
 					os.makedirs(directory)
 				downloader.downloadChapter(c.link, directory, True)
@@ -113,6 +118,13 @@ txtMangaUrl = QLineEdit(window)
 btnDownloadChaptersList = QPushButton(window)
 btnDownloadChaptersList.setText("Download Chapters List")
 btnDownloadChaptersList.clicked.connect(downloadChaptersList)
+
+lblTargetDirectory = QLabel("Target directory: ", window)
+txtTargetDirectory = QLineEdit(window)
+
+btnSelectTargetDirectory = QPushButton(window)
+btnSelectTargetDirectory.setText("...")
+btnSelectTargetDirectory.clicked.connect(selectTargetDirectory)
 
 btnCheckSelected = QPushButton(window)
 btnCheckSelected.setText("Check Selected")
@@ -135,6 +147,11 @@ topLayout.addWidget(lblMangaUrl)
 topLayout.addWidget(txtMangaUrl)
 topLayout.addWidget(btnDownloadChaptersList)
 mainLayout.addItem(topLayout)
+targetDirectoryLayout = QHBoxLayout()
+targetDirectoryLayout.addWidget(lblTargetDirectory)
+targetDirectoryLayout.addWidget(txtTargetDirectory)
+targetDirectoryLayout.addWidget(btnSelectTargetDirectory)
+mainLayout.addItem(targetDirectoryLayout)
 mainLayout.addWidget(btnCheckSelected)
 mainLayout.addWidget(list)
 mainLayout.addWidget(btnStart)
