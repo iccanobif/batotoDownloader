@@ -59,9 +59,21 @@ def downloadSelectedChapters():
 	global chaptersList
 	chapters = []
 	
+	if txtTargetDirectory.text() == "":
+		QMessageBox.warning(window, "Error", "Please specify a target directory.")
+		return
+	
+	if not os.path.exists(txtTargetDirectory.text()):
+		QMessageBox.warning(window, "Error", "The specified target directory does not exist")
+		return
+	
 	for i in range(0, list.count()):
 		if list.item(i).checkState() == Qt.CheckState.Checked:
 			chapters.append(chaptersList[list.item(i).data(Qt.UserRole)])
+			
+	if chapters == []:
+		QMessageBox.warning(window, "Error", "Please select at least one chapter")
+		return
 	
 	thread = DownloaderThread(window, chapters)
 	thread.logWritten.connect(writeLog)

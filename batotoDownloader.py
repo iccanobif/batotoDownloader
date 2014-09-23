@@ -107,7 +107,7 @@ class MangaDownloader(QtCore.QObject):
 				os.remove(downloadDir + "\\" + fileName)
 			zip.close()
 			os.removedirs(downloadDir)
-		self.log("Chapter done!")
+		self.log("Chapter done! Saved to " + downloadDir)
 	
 	def fakeJob(self):
 		self.log("START JOB")
