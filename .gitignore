@@ -5,3 +5,5 @@ bs4/builder/__pycache__/
 *.jpg
 *.png
 __pycache__
+dist
+batotoDownloader.zip

@@ -37,7 +37,6 @@ class MangaDownloader(QtCore.QObject):
 	
 	def getChapterList(self, url):
 		html = self.getHtml(url)
-		#html = open("konos.htm").read()
 		output = []
 		soup = BeautifulSoup(html)
 		rows = soup.find(class_="chapters_list").find_all("tr")
