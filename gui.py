@@ -122,7 +122,7 @@ class DownloaderThread(QThread):
 
 # Widgets setup
 
-window.setWindowTitle("Batoto Downloader")
+window.setWindowTitle("Batoto Downloader v0.1")
 
 lblMangaUrl = QLabel("Manga url: ", window)
 txtMangaUrl = QLineEdit(window)
