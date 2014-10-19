@@ -40,19 +40,21 @@ def writeLog(text):
 	txtLog.setPlainText(time.strftime("[%H:%M] ") + text + "\n" + txtLog.toPlainText())
 
 def disableStuff():
-	global btnStart, btnDownloadChaptersList, txtMangaUrl, btnCheckSelected, list
+	global btnStart, btnDownloadChaptersList, txtMangaUrl, btnCheckSelected, txtTargetDirectory, list
 	btnStart.setEnabled(False)
 	btnDownloadChaptersList.setEnabled(False)
 	txtMangaUrl.setEnabled(False)
 	btnCheckSelected.setEnabled(False)
+    txtTargetDirectory.setEnabled(False)
 	list.setEnabled(False)
 	
 def enableStuff():
-	global btnStart, btnDownloadChaptersList, txtMangaUrl, btnCheckSelected, list
+	global btnStart, btnDownloadChaptersList, txtMangaUrl, btnCheckSelected, txtTargetDirectory, list
 	btnStart.setEnabled(True)
 	btnDownloadChaptersList.setEnabled(True)
 	txtMangaUrl.setEnabled(True)
 	btnCheckSelected.setEnabled(True)
+    txtTargetDirectory.setEnabled(True)
 	list.setEnabled(True)
 
 def downloadSelectedChapters():
