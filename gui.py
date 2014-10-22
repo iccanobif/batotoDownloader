@@ -45,7 +45,7 @@ def disableStuff():
 	btnDownloadChaptersList.setEnabled(False)
 	txtMangaUrl.setEnabled(False)
 	btnCheckSelected.setEnabled(False)
-    txtTargetDirectory.setEnabled(False)
+	txtTargetDirectory.setEnabled(False)
 	list.setEnabled(False)
 	
 def enableStuff():
@@ -54,7 +54,7 @@ def enableStuff():
 	btnDownloadChaptersList.setEnabled(True)
 	txtMangaUrl.setEnabled(True)
 	btnCheckSelected.setEnabled(True)
-    txtTargetDirectory.setEnabled(True)
+	txtTargetDirectory.setEnabled(True)
 	list.setEnabled(True)
 
 def downloadSelectedChapters():
