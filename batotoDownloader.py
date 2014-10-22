@@ -5,7 +5,7 @@ import re
 import io
 import gzip
 import time
-from zipfile import ZipFile
+import zipfile
 from bs4 import BeautifulSoup
 from PySide import QtCore
 
@@ -98,7 +98,7 @@ class MangaDownloader(QtCore.QObject):
 		
 		if saveToZip:
 			self.log("Zipping...")
-			zip = ZipFile(downloadDir + ".zip", "w")
+			zip = zipfile.ZipFile(downloadDir + ".zip", "w", zipfile.ZIP_DEFLATED)
 			for fileName in os.listdir(downloadDir):
 				f = open(downloadDir + "\\" + fileName, "rb")
 				zip.writestr(fileName, f.read())
