@@ -71,7 +71,7 @@ def downloadSelectedChapters():
 	
 	for i in range(0, list.count()):
 		if list.item(i).checkState() == Qt.CheckState.Checked:
-			chapters.append(chaptersList[list.item(i).data(Qt.UserRole)])
+			chapters.insert(0, chaptersList[list.item(i).data(Qt.UserRole)])
 			
 	if chapters == []:
 		QMessageBox.warning(window, "Error", "Please select at least one chapter")
